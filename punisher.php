@@ -947,7 +947,7 @@ switch ($action) {
                     # If it doesn't exist, add it
                     $file .= "\r\n//---PRESERVE ME---
 # Anything below this line will be preserved when the admin control panel rewrites
-# the settings. Useful for storing settings that don't/can't be changed from the control panel\r\n";
+# the settings. Useful for storing settings that don't can't be changed from the control panel\r\n";
 
                 }
 
@@ -1536,7 +1536,7 @@ foreach ($options->section as $section) {
                             $relativeToEscaped = str_replace('\\', '\\\\', $relativeTo);
 
                             # Add to existing field
-                            $field .= '<input type="checkbox" onclick="toggleRelative(this,\''.$option['key'].'\')" value="'.$relativeTo.'" name="relative_'.$option['key'].'" id="relative_'.$option['key'].'"'.$checked.'><label class="tooltip" for="relative_'.$option['key'].'" onmouseover="tooltip(\'You can specify the value as relative to the '.$option->relative['desc'].':<br><b>'.$relativeToEscaped.'</b>\')" onmouseout="exit();">Relative to '.$option->relative['desc'].'</label>';
+                            $field .= '<input type="checkbox" onclick="toggleRelative(this,\''.$option['key'].'\')" value="'.$relativeTo.'" name="relative_'.$option['key'].'" id="relative_'.$option['key'].'"'.$checked.'><label class="tooltip" for="relative_'.$option['key'].'" title="You can specify the value as relative to the '.$option->relative['desc'].':<br><b>'.$relativeToEscaped.'</b>\" onmouseout="exit();">Relative to '.$option->relative['desc'].'</label>';
                         }
                         break;
 
@@ -1560,7 +1560,7 @@ foreach ($options->section as $section) {
 
                 }
 
-                $tooltip = $option->desc ? 'class="tooltip" onmouseover="tooltip(\'' . htmlentities(addslashes($option->desc), ENT_QUOTES) . '\')" onmouseout="exit()"' : '';
+                $tooltip = $option->desc ? 'class="tooltip" title="\'' . htmlentities(addslashes($option->desc), ENT_QUOTES) . '\'" ' : '';
 
                 if ($option['unit']) {
                     $field .= ' ' . $option['unit'];
@@ -1622,8 +1622,8 @@ foreach ($options->section as $section) {
                 <td width="50">Default</td>
                 <td>Description</td>
                 <td width="50">Force <span class="tooltip"
-                                           onmouseover="tooltip('Forced options do not appear on the proxy form and will always use the default value')"
-                                           onmouseout="exit()">?</span></td>
+                                           title="Forced options do not appear on the proxy form and will always use the default value"
+                                           >?</span></td>
             </tr>
             <?php
 
@@ -1819,9 +1819,7 @@ OUT;
                 <td><b><?= $status ?></b></td>
             </tr>
             <tr>
-                <td align="right"><span class="tooltip"
-                                        onmouseover="tooltip('The value here is for viewing and analysing logs only - changing this has no effect on the proxy logging feature itself and will not change the folder in which new log files are created.')"
-                                        onmouseout="exit()">Log folder</span>:
+                <td align="right"><span class="tooltip" title="The value here is for viewing and analysing logs only - changing this has no effect on the proxy logging feature itself and will not change the folder in which new log files are created.">Log folder</span>:
                 </td>
                 <td><input type="text" name="destination" class="inputgri wide-input" value="<?= $destination ?>">
                     <input type="submit" class="button" value="Update &raquo;"></td>
