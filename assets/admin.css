@@ -256,7 +256,8 @@ body.loaded {
 
 #content ul.black li {
     padding: 0 0 0 20px;
-    margin: 0;
+    margin: 10px 0px;
+    display:block;
 }
 
 #content ul.black li a:link, #content ul.black li a:visited {
@@ -277,7 +278,7 @@ body.loaded {
 
 #content ol li a:hover, #content ul.green li a:hover, .table_header td a:hover {
     color: #73A822;
-    text-decoration: underline
+    text-decoration: none !important;
 }
 
 #content p.paging {
@@ -373,11 +374,12 @@ textarea.inputgri {
 
 #content .other_links a, #content .other_links a:visited, #content ul.black li a:hover {
     color: #999;
-    text-decoration: underline
+    text-decoration: none !important;
 }
 
 #content .other_links a:hover {
-    color: #666
+    color: #666;
+    text-decoration: none !important;
 }
 
 code {
@@ -469,7 +471,8 @@ a {
 }
 
 a:hover {
-    color: #ff0000 !important
+    color: #ff0000 !important;
+    text-decoration: none !important;
 }
 
 input {
