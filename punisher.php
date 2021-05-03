@@ -1669,7 +1669,7 @@ foreach ($options->section as $section) {
 
 
             ?>
-            </table>';
+            </table>
             <?php
             break;
 
