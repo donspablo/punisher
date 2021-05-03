@@ -115,7 +115,7 @@ body.loaded {
     float: right;
     line-height: 25px;
     padding: 0 16px;
-    border-right: 1px solid #555
+    border-right: 1px solid #333
 }
 
 #navigation ul li a:hover {
@@ -160,7 +160,7 @@ body.loaded {
 
 #footer #footer_bg {
     padding: 15px 15px 25px;
-    border-top: 1px solid #000000
+    border-top: 1px solid #333
 }
 
 #footer #design {
@@ -193,20 +193,20 @@ body.loaded {
 .table_header td {
     padding: 5px 10px;
     color: #467aa7;
-    border-top: 1px solid #CBD6DE;
-    border-bottom: 1px solid #ADBECB;
+    border-top: 1px solid #333;
+    border-bottom: 1px solid #333;
     font-weight: bold;
-    border: 1px solid #CBD6DE
+    border: 1px solid #333
 }
 
 .row1 td, .row2 td, .row3 td, .row_hover td, .paging_row td {
     padding: 5px 10px;
     color: #666;
-    border: 1px solid #CBD6DE
+    border: 1px solid #333
 }
 
 .row1 td {
-    background: #fff
+    background: #111
 }
 
 .row3 td {
@@ -228,7 +228,7 @@ body.loaded {
 .img_left {
     float: left;
     padding: 1px;
-    border: 1px solid #ccc;
+    border: 1px solid #333;
     margin: 0 10px 10px 0
 }
 
@@ -283,7 +283,7 @@ body.loaded {
 
 #content p.paging {
     padding: 5px;
-    border: 1px solid #CBD6DE;
+    border: 1px solid #333;
     text-align: center;
     margin-bottom: 15px;
     background: #eee
@@ -313,7 +313,7 @@ input.button:hover {
 
 input.inputgri, select.inputgri, textarea.inputgri {
     background: #eee;
-    border: 1px solid #ccc;
+    border: 1px solid #333;
     padding: 5px
 }
 
@@ -327,7 +327,7 @@ textarea.inputgri {
 
 .notice {
     background: #fff;
-    border: 1px solid #ff0000;
+    border: 1px solid #333;
     padding: 15px;
     margin-bottom: 15px;
     color: #ff0000
@@ -335,7 +335,7 @@ textarea.inputgri {
 
 .notice_error {
     background: #FEDCDA;
-    border: 1px solid #CE090E;
+    border: 1px solid #333;
     padding: 15px;
     margin-bottom: 15px;
     color: #ff0000
@@ -357,7 +357,7 @@ textarea.inputgri {
 
 .other_links {
     background: #eee;
-    border-top: 1px solid #ccc;
+    border-top: 1px solid #333;
     padding: 5px;
     margin: 0 0 15px
 }
@@ -401,7 +401,7 @@ code {
 }
 
 .hr {
-    border-top: 2px solid #ccc;
+    border-top: 2px solid #333;
     margin: 5px 0 15px
 }
 
@@ -435,7 +435,7 @@ code {
 
 .tooltip {
     padding-bottom: 1px;
-    border-bottom: 1px dotted #70A522;
+    border-bottom: 1px dotted #333;
     cursor: help
 }
 
@@ -448,7 +448,7 @@ code {
 
 .comment {
     padding: 5px;
-    border: 1px solid #CBD6DE;
+    border: 1px solid #333;
     border-width: 1px 0 1px 0;
     margin-bottom: 15px;
     background: #f6f6f6;
