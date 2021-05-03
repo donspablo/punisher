@@ -33,6 +33,41 @@ $cache_bust = filemtime(__FILE__) + filemtime(ADMIN_PUNISH_SETTINGS);
 
 define('NL', "\r\n");
 
+
+
+
+$output = new SkinOutput;
+
+
+
+$tpl = new Overloader;
+
+
+$location = new Location;
+
+
+$user = new User();
+
+
+$confirm = new Notice('confirm');
+$error = new Notice('error');
+
+
+$input = new Input;
+
+
+
+$output->addObserver($confirm);
+$output->addObserver($error);
+
+
+$location->addObserver($confirm);
+$location->addObserver($error);
+
+
+$output->admin = $user->name;
+
+
 if (isset($_GET['image'])) {
 
     function sendImage($str)
@@ -352,6 +387,43 @@ abstract class Output extends Overloader
 
 }
 
+
+if (!$settingsLoaded) {
+
+
+    $error->add('The settings file for Punisher could not be found.
+					 Please upload this tool into your root punisher directory.
+					 If you wish to run this script from another location,
+					 edit the configuration options at the top of the file.
+					 <br><br>
+					 Attempted to load: <b>' . ADMIN_PUNISH_SETTINGS . '</b>');
+    $output->out();
+
+}
+
+
+
+if (!$user->isAdmin()) {
+    $action = 'login';
+}
+
+
+if (!isset($adminDetails)) {
+    $action = 'install';
+}
+
+
+
+$self = ADMIN_URI;
+
+
+if ($user->isAdmin()) {
+    $output->addNavigation('Home', $self);
+    $output->addNavigation('Edit Settings', $self . '?settings');
+    $output->addNavigation('View Logs', $self . '?logs');
+    $output->addNavigation('BlockScript&reg;', $self . '?blockscript');
+}
+
 class SkinOutput extends Output
 {
 
@@ -408,7 +480,7 @@ class SkinOutput extends Output
                             <?php
 
                             if ($this->admin) {
-                                echo "welcome, <i><?=$this->admin?></i> : <strong><a href=\"<?=$self?>?logout\">log out</a></strong>\r\n";
+                                echo "welcome, <i><?=$this->admin?></i> : <strong><a href=\"{$self}?logout\">log out</a></strong>\r\n";
                             }
 
                             $http_host = isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : '';
@@ -426,14 +498,13 @@ class SkinOutput extends Output
                     <div id="navigation">
                         <ul>
                             <?php
-
                             if (is_array($this->navigation)) {
 
                                 foreach ($this->navigation as $text => $href) {
                                     if (stripos($href, $self) !== false) {
-                                        echo "<li><a href=\"{$href}\"><?=$text?></a></li>\r\n";
+                                        echo "<li><a href=\"{$href}\">{$text}</a></li>\r\n";
                                     } else {
-                                        echo "<li><a href=\"{$href}\" target=\"_blank\"><?=$text?></a></li>\r\n";
+                                        echo "<li><a href=\"{$href}\" target=\"_blank\">{$text}</a></li>\r\n";
                                     }
                                 }
 
@@ -745,39 +816,6 @@ class Notice
 }
 
 
-# Create output object
-$output = new SkinOutput;
-
-# Create an overloader object to hold our template vars.
-# This keeps them all together and avoids problems with undefined variable notices.
-$tpl = new Overloader;
-
-# Location wrapper for redirections
-$location = new Location;
-
-# Create user object
-$user = new User();
-
-# Create notice handlers
-$confirm = new Notice('confirm');
-$error = new Notice('error');
-
-# Input wrapper
-$input = new Input;
-
-
-# Add notice handlers as observers of the output object
-$output->addObserver($confirm);
-$output->addObserver($error);
-
-# Add notice handlers as observers on redirect();
-$location->addObserver($confirm);
-$location->addObserver($error);
-
-# Pass user details to output object
-$output->admin = $user->name;
-
-
 if ($input->gFetch && $user->isAdmin()) {
 
     # Stop caching of response
@@ -859,42 +897,6 @@ if ($input->gFetch && $user->isAdmin()) {
     exit;
 }
 
-
-if (!$settingsLoaded) {
-
-    # Show error and exit
-    $error->add('The settings file for Punisher could not be found.
-					 Please upload this tool into your root punisher directory.
-					 If you wish to run this script from another location,
-					 edit the configuration options at the top of the file.
-					 <br><br>
-					 Attempted to load: <b>' . ADMIN_PUNISH_SETTINGS . '</b>');
-    $output->out();
-
-}
-
-
-# Are we an admin? If not, force login page.
-if (!$user->isAdmin()) {
-    $action = 'login';
-}
-
-# Do we even have any user details? If not, force installer.
-if (!isset($adminDetails)) {
-    $action = 'install';
-}
-
-
-# URI to self
-$self = ADMIN_URI;
-
-# Links to other sections of the control panel
-if ($user->isAdmin()) {
-    $output->addNavigation('Home', $self);
-    $output->addNavigation('Edit Settings', $self . '?settings');
-    $output->addNavigation('View Logs', $self . '?logs');
-    $output->addNavigation('BlockScript&reg;', $self . '?blockscript');
-}
 
 
 switch ($action) {
@@ -1191,7 +1193,7 @@ switch ($action) {
         $proxyVersion = isset($SETTINGS['version']) ? $SETTINGS['version'] : 'unknown - pre 1.0';
 
         # Create javascript to update the latest stable version
-        $javascript = "function updateLatestVersion(response) {document.getElementById('current-version').innerHTML = '<img src=\"http://www.ţ.com/feeds/proxy-version.php?cb=" . $cache_bust . "\" border=\"0\" alt=\"version\" />';}";
+        $javascript = "function updateLatestVersion(response) {document.getElementById('current-version').innerHTML = '<img src=\"http://www.ţ.com/feeds/version.png\" border=\"0\" alt=\"version\" />';}";
 
         $output->addJavascript($javascript);
 
@@ -1201,7 +1203,7 @@ switch ($action) {
         <ul class="green">
             <li>Control Panel version: <b><?= $acpVersion ?></b></li>
             <li>Punisher version: <b><?= $proxyVersion ?></b></li>
-            <li>Latest version: <span class="bold" id="current-version">unknown</span></li>
+            <li><span class="bold" id="current-version">unknown</span></li>
         </ul>
         <?php
 
@@ -1212,7 +1214,7 @@ switch ($action) {
         }
 
         if ($proxyVersion != 'unknown - pre 1.0' && version_compare(forCompare($acpVersion), forCompare($proxyVersion), '>')) {
-            echo "<p><span class=\"bold error-color\">Note:</span> Your settings file needs updating. Use the <a href=\"{$self}?settings\">Edit Settings</a> page and click Update.</p>";
+            echo "<p><span class=\"bold error-color\">Note:</span> Your settings file needs updating. Use the <a href=\"<?=$self?>?settings\">Edit Settings</a> page and click Update.</p>";
         }
 
 
@@ -1231,7 +1233,7 @@ switch ($action) {
         }
 
         # Load options into object
-        $options = simplexml_load_string('<?xml version="1.0" encoding="UTF-8"?><options><section name="Special Options" type="settings"><option key="license_key" type="string" input="text" styles="wide-input"><title>Punisher License key</title><default>\'\'</default><desc>If you have purchased a license, please enter your license key here. Leave blank if you don\'t have a license.</desc></option><option key="enable_blockscript" type="bool" input="radio"><title>Enable BlockScript</title><default>false</default><desc>BlockScript is security software which protects websites and empowers webmasters to stop unwanted traffic.</desc></option></section><section name="Installation Options" type="settings"><option key="asset" type="string" input="select"><title>Asset</title><default>\'default\'</default><desc>Theme/skin to use. This should be the name of the appropriate folder inside the /assets/ folder.</desc><generateOptions eval="true"><![CDATA[/* Check the dir exists */$assetDir = PUNISH_ROOT . \'/assets/\';if ( ! is_dir($assetDir) ) {return false;?>/* Load folders from /assets/ */$dirs = scandir($assetDir);/* Loop through to create options string */$options = \'\';foreach ( $dirs as $dir ) {/* Ignore dotfiles */if ( $dir[0] == \'.\' ) {continue;?>/* Add if this is valid asset */if ( file_exists($assetDir . $dir . \'/main.php\') ) {/* Make selected if this is our current asset */$selected =	( isset($currentValue) && $currentValue == $dir ) ? \' selected="selected"\' : \'\';/* Add option */$options .= "<option<?=$selected?>><?=$dir?></option>";}}return $options;]]></generateOptions></option><option key="plugins" type="string" input="text" styles="wide-input" readonly="readonly"><title>Register Plugins</title><default></default><desc>Run plugins on these websites</desc><toDisplay eval="true"><![CDATA[ if ($handle = opendir(PUNISH_ROOT."/plugins")) {while (($plugin=readdir($handle))!==false) {if (preg_match(\'#\.php$#\', $plugin)) <?=$plugin = preg_replace("#\.php$#", "", $plugin);$plugins[] = $plugin;}}closedir($handle);$plugin_list = implode(",", $plugins);} return $plugin_list; ]]></toDisplay><afterField>Auto-generated from plugins directory. Do not edit!</afterField></option><option key="tmp_dir" type="string" input="text" styles="wide-input"><title>Temporary directory</title><default>PUNISH_ROOT . \'/tmp/\'</default><desc>Temporary directory used by the script. Many features require write permission to the temporary directory. Ensure this directory exists and is writable for best performance.</desc><relative to="PUNISH_ROOT" desc="root proxy folder" /><isDir /></option><option key="gzip_return" type="bool" input="radio"><title>Use GZIP compression</title><default>false</default><desc>Use GZIP compression when sending pages back to the user. This reduces bandwidth usage but at the cost of increased CPU load.</desc></option><option key="ssl_warning" type="bool" input="radio"><title>SSL warning</title><default>true</default><desc>Warn users before browsing a secure site if on an insecure connection. This option has no effect if your proxy is on https.</desc></option><option key="override_javascript" type="bool" input="radio"><title>Override native javascript</title><default>false</default><desc>The fastest and most reliable method of ensuring javascript is properly proxied is to override the native javascript functions with our own. However, this may interfere with any other javascript added to the page, such as ad codes.</desc></option><option key="load_limit" type="float" input="text" styles="small-input"><title>Load limiter</title><default>0</default><desc>This option fetches the server load and stops the script serving pages whenever the server load goes over the limit specified. Set to 0 to disable this feature.</desc><afterField eval="true"><![CDATA[/* Attempt to find the load */$load = ( ($uptime = @shell_exec(\'uptime\')) && preg_match(\'#load average: ([0-9.]+),#\', $uptime, $tmp) ) ? (float) $tmp[1] : false;if ( $load === false ) {return \'<span class="error-color">Feature unavailable here</span>. Failed to find current server load.\';} else {return \'<span class="ok-color">Feature available here</span>. Current load: \' . $load;}]]></afterField></option><option key="footer_include" type="string" input="textarea" styles="wide-input"><title>Footer include</title><default>\'\'</default><desc>Anything specified here will be added to the bottom of all proxied pages just before the <![CDATA[</body>]]> tag.</desc><toDisplay eval="true"><![CDATA[ return htmlentities($currentValue); ]]></toDisplay></option></section><section name="URL Encoding Options" type="settings"><option key="path_info_urls" type="bool" input="radio"><title>Use path info</title><default>false</default><desc>Formats URLs as browse.php/aHR0... instead of browse.php?u=aHR0... Path info may not be available on all servers.</desc></option></section><section name="Hotlinking" type="settings"><option key="stop_hotlinking" type="bool" input="radio"><title>Prevent hotlinking</title><default>true</default><desc>This option prevents users &quot;hotlinking&quot; directly to a proxied page and forces all users to first visit the index page. Note: hotlinking is also prevented when the &quot;Encrypt URL&quot; option is enabled.</desc></option><option key="hotlink_domains" type="array" input="textarea" styles="wide-input"><title>Allow hotlinking from</title><default>array()</default><desc>If the above option is enabled, you can add individual referrers that are allowed to bypass the hotlinking protection. Note: hotlinking is also prevented when the &quot;Encrypt URL&quot; option is enabled.</desc><toDisplay eval="true"><![CDATA[ return implode("\r\n", $currentValue); ]]></toDisplay><toStore eval="true"><![CDATA[ $value = str_replace("\r", "\n", $value);$value=preg_replace("#\n+#", "\n", $value);return array_filter(explode("\n", $value));]]></toStore><afterField>Enter one domain per line</afterField></option></section><section name="Logging" type="settings"><comment><![CDATA[<p>You may be held responsible for requests from your proxy\'s IP address. You can use logs to record the decrypted URLs of pages visited by users in case of illegal activity undertaken through your proxy.</p>]]></comment><option key="enable_logging" type="bool" input="radio"><title>Enable logging</title><default>false</default><desc>Enable/disable the logging feature. If disabled, skip the rest of this section.</desc></option><option key="logging_destination" type="string" input="text" styles="wide-input"><title>Path to log folder</title><default>$SETTINGS[\'tmp_dir\']	. \'logs/\'</default><desc>Enter a destination for log files. A new log file will be created each day in the directory specified. The directory must be writable. To protect against unauthorized access, place the log folder above your webroot.</desc><relative to="$SETTINGS[\'tmp_dir\']" desc="temporary directory" /><isDir /></option><option key="log_all" type="bool" input="radio"><title>Log all requests</title><default>false</default><desc>You can avoid huge log files by only logging requests for .html pages, as per the default setting. If you want to log all requests (images, etc.) as well, enable this.</desc></option></section><section name="Website access control" type="settings"><comment><![CDATA[<p>You can restrict access to websites through your proxy with either a whitelist or a blacklist:</p><ul class="black"><li>Whitelist: any site that <strong>is not</strong> on the list will be blocked.</li><li>Blacklist: any site that <strong>is</strong> on the list will be blocked</li></ul>]]></comment><option key="whitelist" type="array" input="textarea" styles="wide-input"><title>Whitelist</title><default>array()</default><desc>Block everything except these websites</desc><toDisplay eval="true"><![CDATA[ return implode("\r\n", $currentValue); ]]></toDisplay><toStore eval="true"><![CDATA[ $value = str_replace("\r", "\n", $value);$value=preg_replace("#\n+#", "\n", $value);return array_filter(explode("\n", $value));]]></toStore><afterField>Enter one domain per line</afterField></option><option key="blacklist" type="array" input="textarea" styles="wide-input"><title>Blacklist</title><default>array()</default><desc>Block these websites</desc><toDisplay eval="true"><![CDATA[ return implode("\r\n", $currentValue); ]]></toDisplay><toStore eval="true"><![CDATA[ $value = str_replace("\r", "\n", $value);$value=preg_replace("#\n+#", "\n", $value);return array_filter(explode("\n", $value));]]></toStore><afterField>Enter one domain per line</afterField></option></section><section name="User access control" type="settings"><comment><![CDATA[<p>You can ban users from accessing your proxy by IP address. You can specify individual IP addresses or IP address ranges in the following formats:</p><ul class="black"><li>127.0.0.1</li><li>127.0.0.1-127.0.0.5</li><li>127.0.0.1/255.255.255.255</li><li>192.168.17.1/16</li><li>189.128/11</li></ul>]]></comment><option key="ip_bans" type="array" input="textarea" styles="wide-input"><title>IP bans</title><default>array()</default><toDisplay eval="true"><![CDATA[ return implode("\r\n", $currentValue); ]]></toDisplay><toStore eval="true"><![CDATA[ $value = str_replace("\r", "\n", $value);$value=preg_replace("#\n+#", "\n", $value);return array_filter(explode("\n", $value));]]></toStore><afterField>Enter one IP address or IP address range per line</afterField></option></section><section name="Transfer options" type="settings"><option key="connection_timeout" type="int" input="text" styles="small-input" unit="seconds"><title>Connection timeout</title><default>5</default><desc>Time to wait for while establishing a connection to the target server. If the connection takes longer, the transfer will be aborted.</desc><afterField>Use 0 for no limit</afterField></option><option key="transfer_timeout" type="int" input="text" styles="small-input" unit="seconds"><title>Transfer timeout</title><default>15</default><desc>Time to allow for the entire transfer. You will need a longer time limit to download larger files.</desc><afterField>Use 0 for no limit</afterField></option><option key="max_filesize" type="int" input="text" styles="small-input" unit="MB"><title>Filesize limit</title><default>0</default><desc>Preserve bandwidth by limiting the size of files that can be downloaded through your proxy.</desc><toDisplay>return $currentValue ? round($currentValue/(1024*1024), 2) : 0;</toDisplay><toStore>return $value*1024*1024;</toStore><afterField>Use 0 for no limit</afterField></option><option key="download_speed_limit" type="int" input="text" styles="small-input" unit="KB/s"><title>Download speed limit</title><default>0</default><desc>Preserve bandwidth by limiting the speed at which files are downloaded through your proxy. Note: if limiting download speed, you may need to increase the transfer timeout to compensate.</desc><toDisplay>return $currentValue ? round($currentValue/(1024), 2) : 0;</toDisplay><toStore>return $value*1024;</toStore><afterField>Use 0 for no limit</afterField></option><option key="resume_transfers" type="bool" input="radio"><title>Resume transfers</title><default>false</default><desc>This forwards any requested ranges from the client and this makes it possible to resume previous downloads. Depending on the &quot;Queue transfers&quot; option below, it may also allow users to download multiple segments of a file simultaneously.</desc></option><option key="queue_transfers" type="bool" input="radio"><title>Queue transfers</title><default>true</default><desc>You can limit use of your proxy to allow only one transfer at a time per user. Disable this for faster browsing.</desc></option></section><section name="Cookies" type="settings"><comment><![CDATA[<p>All cookies must be sent to the proxy script. The script can then choose the correct cookies to forward to the target server. However there are finite limits in both the client\'s storage space and the size of the request Cookie: header that the server will accept. For prolonged browsing, you may wish to store cookies server side to avoid this problem.</p><br><p>This has obvious privacy issues - if using this option, ensure your site clearly states how it handles cookies and protect the cookie data from unauthorized access.</p>]]></comment><option key="cookies_on_server" type="bool" input="radio"><title>Store cookies on server</title><default>false</default><desc>If enabled, cookies will be stored in the folder specified below.</desc></option><option key="cookies_folder" type="string" input="text" styles="wide-input"><title>Path to cookie folder</title><default>$SETTINGS[\'tmp_dir\']	 . \'cookies/\'</default><desc>If storing cookies on the server, specify a folder to save the cookie data in. To protect against unauthorized access, place the cookie folder above your webroot.</desc><relative to="$SETTINGS[\'tmp_dir\']" desc="temporary directory" /><isDir /></option><option key="encode_cookies" type="bool" input="radio"><title>Encode cookies</title><default>false</default><desc>You can encode cookie names, domains and values with this option for optimum privacy but at the cost of increased server load and larger cookie sizes. This option has no effect if storing cookies on server.</desc></option></section><section name="Maintenance" type="settings"><option key="tmp_cleanup_interval" type="float" input="text" styles="small-input" unit="hours"><title>Cleanup interval</title><default>48</default><desc>How often to clear the temporary files created by the script?</desc><afterField>Use 0 to disable</afterField></option><option key="tmp_cleanup_logs" type="float" input="text" styles="small-input" unit="days"><title>Keep logs for</title><default>30</default><desc>When should old log files be deleted? This option has no effect if the above option is disabled.</desc><afterField>Use 0 to never delete logs</afterField></option></section><section type="user" name="User Configurable Options"><option key="encodeURL" default="true" force="false"><title>Encrypt URL</title><desc>Encrypts the URL of the page you are viewing for increased privacy. Note: this option is intended to obscure URLs and does not provide security. Use SSL for actual security.</desc></option><option key="encodePage" default="false" force="false"><title>Encrypt Page</title><desc>Helps avoid filters by encrypting the page before sending it and decrypting it with javascript once received. Note: this option is intended to obscure HTML source code and does not provide security. Use SSL for actual security.</desc></option><option key="showForm" default="true" force="true"><title>Show Form</title><desc>This provides a mini-form at the top of each page that allows you to quickly jump to another site without returning to our homepage.</desc></option><option key="allowCookies" default="true" force="false"><title>Allow Cookies</title><desc>Cookies may be required on interactive websites (especially where you need to log in) but advertisers also use cookies to track your browsing habits.</desc></option><option key="tempCookies" default="true" force="true"><title>Force Temporary Cookies</title><desc>This option overrides the expiry date for all cookies and sets it to at the end of the session only - all cookies will be deleted when you shut your browser. (Recommended)</desc></option><option key="stripTitle" default="false" force="true"><title>Remove Page Titles</title><desc>Removes titles from proxied pages.</desc></option><option key="stripJS" default="true" force="false"><title>Remove Scripts</title><desc>Remove scripts to protect your anonymity and speed up page loads. However, not all sites will provide an HTML-only alternative. (Recommended)</desc></option><option key="stripObjects" default="false" force="false"><title>Remove Objects</title><desc>You can increase page load times by removing unnecessary Flash, Java and other objects. If not removed, these may also compromise your anonymity.</desc></option></section><section type="forced" hidden="true" name="Do not edit this section manually!"><option key="version" type="string"><default>\'' . ADMIN_VERSION . '\'</default><desc>Settings file version for determining compatibility with admin tool.</desc></option></section></options>');
+        $options = simplexml_load_string('<?xml version="1.0" encoding="UTF-8"?><options><section name="Special Options" type="settings"><option key="license_key" type="string" input="text" styles="wide-input"><title>Punisher License key</title><default>\'\'</default><desc>If you have purchased a license, please enter your license key here. Leave blank if you don\'t have a license.</desc></option><option key="enable_blockscript" type="bool" input="radio"><title>Enable BlockScript</title><default>false</default><desc>BlockScript is security software which protects websites and empowers webmasters to stop unwanted traffic.</desc></option></section><section name="Installation Options" type="settings"><option key="theme" type="string" input="select"><title>Theme</title><default>\'default\'</default><desc>Theme/skin to use. This should be the name of the appropriate folder inside the /themes/ folder.</desc><generateOptions eval="true"><![CDATA[/* Check the dir exists */$themeDir = PUNISH_ROOT . \'/assets/\';if ( ! is_dir($themeDir) ) {return false;}/* Load folders from /assets/ */$dirs = scandir($themeDir);/* Loop through to create options string */$options = \'\';foreach ( $dirs as $dir ) {/* Ignore dotfiles */if ( $dir[0] == \'.\' ) {continue;}/* Add if this is valid theme */if ( file_exists($themeDir . $dir . \'/main.php\') ) {/* Make selected if this is our current theme */$selected =	( isset($currentValue) && $currentValue == $dir ) ? \' selected="selected"\' : \'\';/* Add option */$options .= "<option{$selected}>{$dir}</option>";}}return $options;]]></generateOptions></option><option key="plugins" type="string" input="text" styles="wide-input" readonly="readonly"><title>Register Plugins</title><default></default><desc>Run plugins on these websites</desc><toDisplay eval="true"><![CDATA[ if ($handle = opendir(PUNISH_ROOT."/plugins")) {while (($plugin=readdir($handle))!==false) {if (preg_match(\'#\.php$#\', $plugin)) {$plugin = preg_replace("#\.php$#", "", $plugin);$plugins[] = $plugin;}}closedir($handle);$plugin_list = implode(",", $plugins);} return $plugin_list; ]]></toDisplay><afterField>Auto-generated from plugins directory. Do not edit!</afterField></option><option key="tmp_dir" type="string" input="text" styles="wide-input"><title>Temporary directory</title><default>PUNISH_ROOT . \'/tmp/\'</default><desc>Temporary directory used by the script. Many features require write permission to the temporary directory. Ensure this directory exists and is writable for best performance.</desc><relative to="PUNISH_ROOT" desc="root proxy folder" /><isDir /></option><option key="gzip_return" type="bool" input="radio"><title>Use GZIP compression</title><default>false</default><desc>Use GZIP compression when sending pages back to the user. This reduces bandwidth usage but at the cost of increased CPU load.</desc></option><option key="ssl_warning" type="bool" input="radio"><title>SSL warning</title><default>true</default><desc>Warn users before browsing a secure site if on an insecure connection. This option has no effect if your proxy is on https.</desc></option><option key="override_javascript" type="bool" input="radio"><title>Override native javascript</title><default>false</default><desc>The fastest and most reliable method of ensuring javascript is properly proxied is to override the native javascript functions with our own. However, this may interfere with any other javascript added to the page, such as ad codes.</desc></option><option key="load_limit" type="float" input="text" styles="small-input"><title>Load limiter</title><default>0</default><desc>This option fetches the server load and stops the script serving pages whenever the server load goes over the limit specified. Set to 0 to disable this feature.</desc><afterField eval="true"><![CDATA[/* Attempt to find the load */$load = ( ($uptime = @shell_exec(\'uptime\')) && preg_match(\'#load average: ([0-9.]+),#\', $uptime, $tmp) ) ? (float) $tmp[1] : false;if ( $load === false ) {return \'<span class="error-color">Feature unavailable here</span>. Failed to find current server load.\';} else {return \'<span class="ok-color">Feature available here</span>. Current load: \' . $load;}]]></afterField></option><option key="footer_include" type="string" input="textarea" styles="wide-input"><title>Footer include</title><default>\'\'</default><desc>Anything specified here will be added to the bottom of all proxied pages just before the <![CDATA[</body>]]> tag.</desc><toDisplay eval="true"><![CDATA[ return htmlentities($currentValue); ]]></toDisplay></option></section><section name="URL Encoding Options" type="settings"><option key="path_info_urls" type="bool" input="radio"><title>Use path info</title><default>false</default><desc>Formats URLs as browse.php/aHR0... instead of browse.php?u=aHR0... Path info may not be available on all servers.</desc></option></section><section name="Hotlinking" type="settings"><option key="stop_hotlinking" type="bool" input="radio"><title>Prevent hotlinking</title><default>true</default><desc>This option prevents users &quot;hotlinking&quot; directly to a proxied page and forces all users to first visit the index page. Note: hotlinking is also prevented when the &quot;Encrypt URL&quot; option is enabled.</desc></option><option key="hotlink_domains" type="array" input="textarea" styles="wide-input"><title>Allow hotlinking from</title><default>array()</default><desc>If the above option is enabled, you can add individual referrers that are allowed to bypass the hotlinking protection. Note: hotlinking is also prevented when the &quot;Encrypt URL&quot; option is enabled.</desc><toDisplay eval="true"><![CDATA[ return implode("\r\n", $currentValue); ]]></toDisplay><toStore eval="true"><![CDATA[ $value = str_replace("\r", "\n", $value);$value=preg_replace("#\n+#", "\n", $value);return array_filter(explode("\n", $value));]]></toStore><afterField>Enter one domain per line</afterField></option></section><section name="Logging" type="settings"><comment><![CDATA[<p>You may be held responsible for requests from your proxy\'s IP address. You can use logs to record the decrypted URLs of pages visited by users in case of illegal activity undertaken through your proxy.</p>]]></comment><option key="enable_logging" type="bool" input="radio"><title>Enable logging</title><default>false</default><desc>Enable/disable the logging feature. If disabled, skip the rest of this section.</desc></option><option key="logging_destination" type="string" input="text" styles="wide-input"><title>Path to log folder</title><default>$CONFIG[\'tmp_dir\']	. \'logs/\'</default><desc>Enter a destination for log files. A new log file will be created each day in the directory specified. The directory must be writable. To protect against unauthorized access, place the log folder above your webroot.</desc><relative to="$CONFIG[\'tmp_dir\']" desc="temporary directory" /><isDir /></option><option key="log_all" type="bool" input="radio"><title>Log all requests</title><default>false</default><desc>You can avoid huge log files by only logging requests for .html pages, as per the default setting. If you want to log all requests (images, etc.) as well, enable this.</desc></option></section><section name="Website access control" type="settings"><comment><![CDATA[<p>You can restrict access to websites through your proxy with either a whitelist or a blacklist:</p><ul class="black"><li>Whitelist: any site that <strong>is not</strong> on the list will be blocked.</li><li>Blacklist: any site that <strong>is</strong> on the list will be blocked</li></ul>]]></comment><option key="whitelist" type="array" input="textarea" styles="wide-input"><title>Whitelist</title><default>array()</default><desc>Block everything except these websites</desc><toDisplay eval="true"><![CDATA[ return implode("\r\n", $currentValue); ]]></toDisplay><toStore eval="true"><![CDATA[ $value = str_replace("\r", "\n", $value);$value=preg_replace("#\n+#", "\n", $value);return array_filter(explode("\n", $value));]]></toStore><afterField>Enter one domain per line</afterField></option><option key="blacklist" type="array" input="textarea" styles="wide-input"><title>Blacklist</title><default>array()</default><desc>Block these websites</desc><toDisplay eval="true"><![CDATA[ return implode("\r\n", $currentValue); ]]></toDisplay><toStore eval="true"><![CDATA[ $value = str_replace("\r", "\n", $value);$value=preg_replace("#\n+#", "\n", $value);return array_filter(explode("\n", $value));]]></toStore><afterField>Enter one domain per line</afterField></option></section><section name="User access control" type="settings"><comment><![CDATA[<p>You can ban users from accessing your proxy by IP address. You can specify individual IP addresses or IP address ranges in the following formats:</p><ul class="black"><li>127.0.0.1</li><li>127.0.0.1-127.0.0.5</li><li>127.0.0.1/255.255.255.255</li><li>192.168.17.1/16</li><li>189.128/11</li></ul>]]></comment><option key="ip_bans" type="array" input="textarea" styles="wide-input"><title>IP bans</title><default>array()</default><toDisplay eval="true"><![CDATA[ return implode("\r\n", $currentValue); ]]></toDisplay><toStore eval="true"><![CDATA[ $value = str_replace("\r", "\n", $value);$value=preg_replace("#\n+#", "\n", $value);return array_filter(explode("\n", $value));]]></toStore><afterField>Enter one IP address or IP address range per line</afterField></option></section><section name="Transfer options" type="settings"><option key="connection_timeout" type="int" input="text" styles="small-input" unit="seconds"><title>Connection timeout</title><default>5</default><desc>Time to wait for while establishing a connection to the target server. If the connection takes longer, the transfer will be aborted.</desc><afterField>Use 0 for no limit</afterField></option><option key="transfer_timeout" type="int" input="text" styles="small-input" unit="seconds"><title>Transfer timeout</title><default>15</default><desc>Time to allow for the entire transfer. You will need a longer time limit to download larger files.</desc><afterField>Use 0 for no limit</afterField></option><option key="max_filesize" type="int" input="text" styles="small-input" unit="MB"><title>Filesize limit</title><default>0</default><desc>Preserve bandwidth by limiting the size of files that can be downloaded through your proxy.</desc><toDisplay>return $currentValue ? round($currentValue/(1024*1024), 2) : 0;</toDisplay><toStore>return $value*1024*1024;</toStore><afterField>Use 0 for no limit</afterField></option><option key="download_speed_limit" type="int" input="text" styles="small-input" unit="KB/s"><title>Download speed limit</title><default>0</default><desc>Preserve bandwidth by limiting the speed at which files are downloaded through your proxy. Note: if limiting download speed, you may need to increase the transfer timeout to compensate.</desc><toDisplay>return $currentValue ? round($currentValue/(1024), 2) : 0;</toDisplay><toStore>return $value*1024;</toStore><afterField>Use 0 for no limit</afterField></option><option key="resume_transfers" type="bool" input="radio"><title>Resume transfers</title><default>false</default><desc>This forwards any requested ranges from the client and this makes it possible to resume previous downloads. Depending on the &quot;Queue transfers&quot; option below, it may also allow users to download multiple segments of a file simultaneously.</desc></option><option key="queue_transfers" type="bool" input="radio"><title>Queue transfers</title><default>true</default><desc>You can limit use of your proxy to allow only one transfer at a time per user. Disable this for faster browsing.</desc></option></section><section name="Cookies" type="settings"><comment><![CDATA[<p>All cookies must be sent to the proxy script. The script can then choose the correct cookies to forward to the target server. However there are finite limits in both the client\'s storage space and the size of the request Cookie: header that the server will accept. For prolonged browsing, you may wish to store cookies server side to avoid this problem.</p><br><p>This has obvious privacy issues - if using this option, ensure your site clearly states how it handles cookies and protect the cookie data from unauthorized access.</p>]]></comment><option key="cookies_on_server" type="bool" input="radio"><title>Store cookies on server</title><default>false</default><desc>If enabled, cookies will be stored in the folder specified below.</desc></option><option key="cookies_folder" type="string" input="text" styles="wide-input"><title>Path to cookie folder</title><default>$CONFIG[\'tmp_dir\']	 . \'cookies/\'</default><desc>If storing cookies on the server, specify a folder to save the cookie data in. To protect against unauthorized access, place the cookie folder above your webroot.</desc><relative to="$CONFIG[\'tmp_dir\']" desc="temporary directory" /><isDir /></option><option key="encode_cookies" type="bool" input="radio"><title>Encode cookies</title><default>false</default><desc>You can encode cookie names, domains and values with this option for optimum privacy but at the cost of increased server load and larger cookie sizes. This option has no effect if storing cookies on server.</desc></option></section><section name="Maintenance" type="settings"><option key="tmp_cleanup_interval" type="float" input="text" styles="small-input" unit="hours"><title>Cleanup interval</title><default>48</default><desc>How often to clear the temporary files created by the script?</desc><afterField>Use 0 to disable</afterField></option><option key="tmp_cleanup_logs" type="float" input="text" styles="small-input" unit="days"><title>Keep logs for</title><default>30</default><desc>When should old log files be deleted? This option has no effect if the above option is disabled.</desc><afterField>Use 0 to never delete logs</afterField></option></section><section type="user" name="User Configurable Options"><option key="encodeURL" default="true" force="false"><title>Encrypt URL</title><desc>Encrypts the URL of the page you are viewing for increased privacy. Note: this option is intended to obscure URLs and does not provide security. Use SSL for actual security.</desc></option><option key="encodePage" default="false" force="false"><title>Encrypt Page</title><desc>Helps avoid filters by encrypting the page before sending it and decrypting it with javascript once received. Note: this option is intended to obscure HTML source code and does not provide security. Use SSL for actual security.</desc></option><option key="showForm" default="true" force="true"><title>Show Form</title><desc>This provides a mini-form at the top of each page that allows you to quickly jump to another site without returning to our homepage.</desc></option><option key="allowCookies" default="true" force="false"><title>Allow Cookies</title><desc>Cookies may be required on interactive websites (especially where you need to log in) but advertisers also use cookies to track your browsing habits.</desc></option><option key="tempCookies" default="true" force="true"><title>Force Temporary Cookies</title><desc>This option overrides the expiry date for all cookies and sets it to at the end of the session only - all cookies will be deleted when you shut your browser. (Recommended)</desc></option><option key="stripTitle" default="false" force="true"><title>Remove Page Titles</title><desc>Removes titles from proxied pages.</desc></option><option key="stripJS" default="true" force="false"><title>Remove Scripts</title><desc>Remove scripts to protect your anonymity and speed up page loads. However, not all sites will provide an HTML-only alternative. (Recommended)</desc></option><option key="stripObjects" default="false" force="false"><title>Remove Objects</title><desc>You can increase page load times by removing unnecessary Flash, Java and other objects. If not removed, these may also compromise your anonymity.</desc></option></section><section type="forced" hidden="true" name="Do not edit this section manually!"><option key="version" type="string"><default>\''.ADMIN_VERSION.'\'</default><desc>Settings file version for determining compatibility with admin tool.</desc></option></section></options>');
 
         #
         # SAVE CHANGES
@@ -1393,7 +1395,7 @@ switch ($action) {
 ?>
 		<p>This page allows you to edit your configuration to customize and tweak your proxy. If an option is unclear, hover over the option name for a more detailed description. <a href="#notes">More...</a></p>
 
-		<form action="{$self}?settings" method="post">
+		<form action="<?=$self?>?settings" method="post">
 <?php
 
 function forCompare($val)
@@ -1496,6 +1498,8 @@ foreach ($options->section as $section) {
 
                 $currentValue = isset($SETTINGS[$key]) ? $SETTINGS[$key] : @eval('return ' . $option->default . ';');
 
+
+
                 if ($option->relative) {
 
                     $relativeTo = @eval('return ' . $option->relative['to'] . ';');
@@ -1504,11 +1508,13 @@ foreach ($options->section as $section) {
 
                 }
 
-                if ($option->toDisplay && ($newValue = @eval($option->toDisplay)) !== false) {
+
+
+                if ( $option->toDisplay && ( $newValue = @eval($option->toDisplay) ) !== false ) {
                     $currentValue = $newValue;
                 }
 
-                $attr = 'type="'.$option['input'].'" name="'.$option['key'].'" id="'.$option['key'].'" value="'.$currentValue.'" class="inputgri '.$option['styles'];
+                $attr = ' type="'.$option['input'].'" name="'.$option['key'].'" id="'.$option['key'].'" value="'.$currentValue.'" class="inputgri" '.$option['styles'];
 
                 switch ($option['input']) {
 
@@ -1536,7 +1542,7 @@ foreach ($options->section as $section) {
 
                     # SELECT FIELD
                     case 'select':
-                        $field = '<select' . $attr . '>' . @eval($option->generateOptions) . '</select>';
+                        $field = '<select' . $attr . '>' . @eval($option->generateOptions). '</select>';
                         break;
 
                     # RADIO
@@ -1544,7 +1550,7 @@ foreach ($options->section as $section) {
                         $onChecked = $currentValue ? ' checked="checked"' : '';
                         $offChecked = !$currentValue ? ' checked="checked"' : '';
 
-                        $field = '<input type="radio" name="'.$option['key'].'" id="'.$option['key'].'_on" value="true" class="inputgri '.$option['styles'].'"'.$onChecked.'><label for="'.$option['key'].'_on">Yes</label>&nbsp; / &nbsp;<input type="radio" name="'.$option['key'].'" id="'.$option['key'].'_off" value="false" class="inputgri '.$option['styles'].'"'.$offChecked.'><label for="'.$option['key'].'_off">No</label>';
+                        $field = '<input type="radio" name="'.$option['key'].'" id="'.$option['key'].'_on" value="true" class="inputgri" '.$option['styles'].'"'.$onChecked.'><label for="'.$option['key'].'_on">Yes</label>&nbsp; / &nbsp;<input type="radio" name="'.$option['key'].'" id="'.$option['key'].'_off" value="false" class="inputgri" '.$option['styles'].'"'.$offChecked.'><label for="'.$option['key'].'_off">No</label>';
                         break;
 
                     # TEXTAREA
@@ -1554,21 +1560,16 @@ foreach ($options->section as $section) {
 
                 }
 
-                # Is there a description to use as tooltip?
                 $tooltip = $option->desc ? 'class="tooltip" onmouseover="tooltip(\'' . htmlentities(addslashes($option->desc), ENT_QUOTES) . '\')" onmouseout="exit()"' : '';
 
-                # Add units
                 if ($option['unit']) {
                     $field .= ' ' . $option['unit'];
                 }
 
-                # Any after field text to add?
                 if ($option->afterField) {
 
-                    # Code to eval or string?
                     $add = $option->afterField['eval'] ? @eval($option->afterField) : $option->afterField;
 
-                    # Add to field
                     if ($add) {
                         $field .= ' (<span class="little">' . $add . '</span>)';
                     }
@@ -1585,10 +1586,8 @@ foreach ($options->section as $section) {
 
                 <?php
 
-                # Is this a directory path we're expecting?
                 if ($option->isDir) {
 
-                    # Write with javascript to hide from non-js browsers
                     $write = jsWrite('(<a style="cursor:pointer;" onclick="test' . $option['key'] . '.changed()">try again</a>)');
 
                     ?>
@@ -1597,7 +1596,7 @@ foreach ($options->section as $section) {
                         <td>
                             &nbsp;&nbsp;
                             <span id="dircheck_<?= $option['key'] ?>"></span>
-                            $write
+                            <?=$write?>
                         </td>
                     </tr>
 
@@ -1612,10 +1611,10 @@ foreach ($options->section as $section) {
             break;
 
 
-        # User configurable options
+
         case 'user':
 
-            # Print table header
+
             ?>
             <table class="table" cellpadding="0" cellspacing="0">
             <tr class="table_header">
@@ -1627,27 +1626,27 @@ foreach ($options->section as $section) {
                                            onmouseout="exit()">?</span></td>
             </tr>
             <?php
-            # Find the current options
+
             $currentOptions = isset($SETTINGS['options']) ? $SETTINGS['options'] : array();
 
-            # Print options
+
             foreach ($section->option as $option) {
 
-                # Get values from XML
+
                 $key = (string)$option['key'];
 
-                # Get values from current settings, resorted to XML if not available
+
                 $title = isset($currentOptions[$key]['title']) ? $currentOptions[$key]['title'] : $option->title;
                 $default = isset($currentOptions[$key]['default']) ? $currentOptions[$key]['default'] : bool($option['default']);
                 $desc = isset($currentOptions[$key]['desc']) ? $currentOptions[$key]['desc'] : $option->desc;
                 $force = isset($currentOptions[$key]['force']) ? $currentOptions[$key]['force'] : bool($option['force']);
 
-                # Determine checkboxes
+
                 $on = $default == true ? ' checked="checked"' : '';
                 $off = $default == false ? ' checked="checked"' : '';
                 $force = $force ? ' checked="checked"' : '';
 
-                # Row color
+
                 $row = isset($row) && $row == 'row1' ? 'row2' : 'row1';
 
                 ?>
@@ -1668,7 +1667,7 @@ foreach ($options->section as $section) {
                 <?php
             }
 
-            # Print table footer
+
             ?>
             </table>';
             <?php
@@ -1678,7 +1677,7 @@ foreach ($options->section as $section) {
 
 }
 
-# Page footer
+
         echo <<<OUT
 		<div class="hr"></div>
 		<p class="center"><input class="button" type="submit" name="submit" value="Save Changes"{$tpl->disabled}></p>
@@ -1700,7 +1699,7 @@ OUT;
     case 'blockscript':
         if (file_exists($bsc = $_SERVER['DOCUMENT_ROOT'] . '/blockscript/tmp/config.php')) {
             include($bsc);
-            #	header('Location: /blockscript/detector.php?blockscript=setup&bsap='.$BS_VAL['admin_password']); exit;
+
         }
         $installed = isset($BS_VAL['license_agreement_accepted']) ? '<span class="ok-color">installed</span>' : '<span class="error-color">not installed</span>';
         $enabled = (isset($BS_VAL['license_agreement_accepted']) && !empty($SETTINGS['enable_blockscript'])) ? '<span class="ok-color">enabled</span>' : '<span class="error-color">disabled</span>';
@@ -1713,7 +1712,7 @@ OUT;
 
         }
 
-        # Print header
+
         $output->title = 'BlockScript&reg;';
         $output->bodyTitle = 'BlockScript&reg; Integration';
 
@@ -1769,46 +1768,46 @@ OUT;
 
     case 'logs':
 
-        # Are we updating the log destination?
+
         if ($input->pDestination !== NULL) {
 
-            # Attempt to validate path
+
             $path = realpath($input->pDestination);
 
-            # Is the path OK?
+
             if ($path) {
                 $confirm->add('Log folder updated.');
             } else {
                 $error->add('Log folder not updated. <b>' . $input->pDestination . '</b> does not exist.');
             }
 
-            # Normalize
+
             $path = str_replace('\\', '/', $path);
 
-            # Add trailing slash
+
             if (isset($path[strlen($path) - 1]) && $path[strlen($path) - 1] != '/') {
                 $path .= '/';
             }
 
-            # Save in session
+
             $_SESSION['logging_destination'] = $path;
 
-            # Redirect to avoid "Resend Post?" on refresh
+
             $location->redirect('logs');
 
         }
 
-        # Find status
+
         $enabled = empty($SETTINGS['enable_logging']) == false;
         $status = $enabled ? '<span class="ok-color">enabled</span>' : '<span class="error-color">disabled</span>';
         $destination = isset($SETTINGS['logging_destination']) ? $SETTINGS['logging_destination'] : '';
 
-        # Are we overriding the real destination with some other value?
+
         if (!empty($_SESSION['logging_destination'])) {
             $destination = $_SESSION['logging_destination'];
         }
 
-        # Print header
+
         $output->title = 'log viewer';
         $output->bodyTitle = 'Logging';
 
@@ -1833,56 +1832,56 @@ OUT;
     <h2>Log files</h2>
 <?php
 
-# Do we have any log files to analyze?
+
 if (!(file_exists($destination) && is_dir($destination) && ($logFiles = scandir($destination, 1)))) {
 
-    # Print none and exit
+
     echo '<p>No log files to analyze.</p>';
     break;
 
 }
 
-# Print starting table
+
 ?>
     <table class="table" cellpadding="0" cellspacing="0">
 <?php
 
-# Set up starting vars
+
 $currentYearMonth = false;
 $first = true;
 $totalSize = 0;
 
-# Go through all files
+
 foreach ($logFiles
 
     as $file) {
 
-    # Verify files is a punisher log. Log files formatted as YYYY-MM-DD.log
+
     if (!(strlen($file) == 14 && preg_match('#^([0-9]{4})-([0-9]{2})-([0-9]{2})\.log$#', $file, $matches))) {
         continue;
     }
 
-    # Extract matches
+
     list(, $yearNumeric, $monthNumeric, $dayNumeric) = $matches;
 
-    # Convert filename to timestamp
+
     $timestamp = strtotime(str_replace('.log', ' 12:00 PM', $file));
 
-    # Extract time parts
+
     $month = date('F', $timestamp);
     $day = date('l', $timestamp);
     $display = date('jS', $timestamp) . ' (' . $day . ')';
     $yearMonth = $yearNumeric . '-' . $monthNumeric;
 
-    # Display in bold if today
+
     if ($display == date('jS (l)')) {
         $display = '<b>' . $display . '</b>';
     }
 
-    # Is this a new month?
+
 if ($yearMonth != $currentYearMonth) {
 
-    # Print in a separate table (unless first)
+
 if ($first == false) {
     ?>
     </table>
@@ -1891,7 +1890,7 @@ if ($first == false) {
     <?php
     }
 
-    # Print table header
+
     ?>
     <tr class="table_header">
         <td colspan="2"><?= $month ?> <?= $yearNumeric ?></td>
@@ -1899,22 +1898,22 @@ if ($first == false) {
     </tr>
     <?php
 
-    # Update vars so we don't do this again until we want to
+
     $currentYearMonth = $yearMonth;
     $first = false;
 
     }
 
-    # Format size
+
     $filesize = filesize($destination . $file);
     $totalSize += $filesize;
 
     $size = formatSize($filesize);
 
-    # Row color is grey if weekend
+
     $row = ($day == 'Saturday' || $day == 'Sunday') ? '3' : '1';
 
-    # Print log file row
+
     ?>
     <tr class="row<?= $row ?>">
         <td width="150"><?= $display ?></td>
@@ -1930,7 +1929,7 @@ if ($first == false) {
 
 }
 
-# End table
+
 $total = formatSize($totalSize);
 
 ?>
@@ -1948,10 +1947,10 @@ $total = formatSize($totalSize);
         $output->title = 'view log';
         $output->bodyTitle = 'View log file';
 
-        # Find log folder
+
         $logFolder = isset($_SESSION['logging_destination']) ? $_SESSION['logging_destination'] : $SETTINGS['logging_destination'];
 
-        # Verify folder is valid
+
         if (!file_exists($logFolder) || !is_dir($logFolder)) {
 
             $error->add('The log folder specified does not exist.');
@@ -1959,16 +1958,16 @@ $total = formatSize($totalSize);
 
         }
 
-        # Find file
+
         $file = $input->gFile ? realpath($logFolder . '/' . str_replace('..', '', $input->gFile)) : false;
 
-        # What type of viewing do we want?
+
         switch ($input->gShow) {
 
-            # Raw log file
+
             case 'raw':
 
-                # Find file
+
                 if ($file == false || file_exists($file) == false) {
 
                     $error->add('The file specified does not exist.');
@@ -1976,114 +1975,114 @@ $total = formatSize($totalSize);
 
                 }
 
-                # Use raw wrapper
+
                 $output = new RawOutput;
 
-                # And load file
+
                 readfile($file);
 
                 break;
 
 
-            # Stats - most visited site
+
             case 'popular-sites':
 
-                # Scan files to find most popular sites
+
                 $scan = array();
 
-                # Find files to scan
+
                 if ($file) {
 
-                    # Single file mode
+
                     $scan[] = $file;
 
-                    # Date of log file
+
                     $date = ($fileTime = strtotime(basename($input->gFile, '.log'))) ? date('l jS F, Y', $fileTime) : '[unknown]';
 
                 } else if ($input->gMonth && strlen($input->gMonth) > 5 && ($logFiles = scandir($logFolder))) {
 
-                    # Month mode - use all files in given month
+
                     foreach ($logFiles as $file) {
 
-                        # Match name
+
                         if (strpos($file, $input->gMonth) === 0) {
                             $scan[] = realpath($logFolder . '/' . $file);
                         }
 
                     }
 
-                    # Date of log files
+
                     $date = date('F Y', strtotime($input->gMonth . '-01'));
                 }
 
-                # Check we have some files to scan
+
                 if (empty($scan)) {
                     $error->add('No files to analyze.');
                     break;
                 }
 
-                # Data array
+
                 $visited = array();
 
-                # Read through files
+
                 foreach ($scan as $file) {
 
-                    # Allow extra time
+
                     @set_time_limit(30);
 
-                    # Open handle to file
+
                     if (($handle = fopen($file, 'rb')) === false) {
                         continue;
                     }
 
-                    # Scan for URLs
+
                     while (($data = fgetcsv($handle, 2000)) !== false) {
 
-                        # Extract URLs
+
                         if (isset($data[2]) && preg_match('#(?:^|\.)([a-z0-9-]+\.(?:[a-z]{2,}|[a-z.]{5,6}))$#i', strtolower(parse_url(trim($data[2]), PHP_URL_HOST)), $tmp)) {
 
-                            # Add to tally
+
                             if (isset($visited[$tmp[1]])) {
 
-                                # Increment an existing count
+
                                 ++$visited[$tmp[1]];
 
                             } else {
 
-                                # Create a new item
+
                                 $visited[$tmp[1]] = 1;
                             }
                         }
                     }
 
-                    # Close handle to free resources
+
                     fclose($handle);
                 }
 
-                # Sort
+
                 arsort($visited);
 
-                # Truncate to first X results
+
                 $others = array_splice($visited, ADMIN_STATS_LIMIT);
 
-                # Sum up the "others" group
+
                 $others = array_sum($others);
 
-                # Print header
+
                 ?>
     <h2>Most visited sites for <?= $date ?></h2>
     <table class="form_table" cellpadding="0" cellspacing="0" width="100%">
         <?php
 
-        # Find largest value
+
         $max = max($visited);
 
-        # Create horizontal bar chart type thing
+
         foreach ($visited as $site => $count) {
 
             $rowWidth = round(($count / $max) * 100);
 
-            # Print it
+
             ?>
             <tr>
                 <td width="200" align="right"><?= $site ?></td>
@@ -2095,7 +2094,7 @@ $total = formatSize($totalSize);
 
         }
 
-        # Table footer
+
         ?>
         <tr>
             <td align="right"><i>Others</i></td>
@@ -2107,7 +2106,7 @@ $total = formatSize($totalSize);
 
     break;
 
-    # Anything else - ignore
+
     default:
 
         $error->add('Missing input. No log view specified.');
@@ -2119,10 +2118,10 @@ break;
 
 default:
 
-# Send 404 status
+
 $output->sendStatus(404);
 
-# And print the error page
+
 $output->title = 'page not found';
 $output->bodyTitle = 'Page Not Found (404)';
 
@@ -2133,14 +2132,14 @@ $output->bodyTitle = 'Page Not Found (404)';
 }
 
 
-# Get buffer
+
 $content = ob_get_contents();
 
-# Clear buffer
+
 ob_end_clean();
 
-# Add content
+
 $output->addContent($content);
 
-# And print
+
 $output->out();
