@@ -1,0 +1,9 @@
+Q:	where does the function preg_match_all come from?
+A:	PCRE functions in PHP 5 and later
+
+Q:	Why can't I fetch https pages?
+A:	Using Punisher to fetch an https page requires PHP to be compiled with OpenSSL support.  If installing PHP from source, refer to the PHP manual	for instructions for enabling OpenSSL support:	http://www.php.net/manual/en/book.openssl.php
+
+Q:	I get the error: Warning: Wrong parameter count for fsockopen()
+A:	Upgrade your verion of PHP to 5 or later
+

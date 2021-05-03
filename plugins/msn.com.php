@@ -1,0 +1,4 @@
+<?php
+
+
+$options['stripJS'] = false; 

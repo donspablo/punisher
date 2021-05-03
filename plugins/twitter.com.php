@@ -1,0 +1,12 @@
+<?php
+
+
+$options['stripJS'] = true;
+
+
+
+
+
+
+
+
