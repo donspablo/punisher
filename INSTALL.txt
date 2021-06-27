@@ -1,7 +1,0 @@
-
-
-
-
- 1. Upload the contents of the /punisher/ folder to the desired directory on your server.
- 2. Visit the URL of your Punisher Admin Control Panel (i.e. http://www.domain.com/punisher.php).
- 3. Set the desired options and save your settings.

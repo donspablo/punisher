@@ -1,11 +1,1 @@
-lumikillers/
-yomother/
-SovDicks/
-vendor/
-app/
-src/
-build/
-public/
-.idea/
-.html
-.env
+files/php/misc.override.php
