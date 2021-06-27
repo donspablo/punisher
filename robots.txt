@@ -1,0 +1,8 @@
+User-agent: *
+Disallow: /punisher.php
+Disallow: /browse.php
+Disallow: /browse.php*
+Disallow: /includes
+Disallow: /plugins
+Disallow: /assets
+Disallow: /tmp
