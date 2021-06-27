@@ -13,9 +13,12 @@ if (isset($_POST['action']) && $_POST['action'] == "submit") {
 	<meta name="viewport" content="width=device-width, initial-scale=1"/>
 	<title>Settings</title>
 	<link rel="stylesheet" href="./files/css/index.css"/>
+    <script src="./files/js/index.js"></script>
+    <link rel="icon" type="image/png" href="./favicon.ico"/>
 </head>
 <body>
 <form action="<?php echo htmlspecialchars($_SERVER['PHP_SELF']); ?>" method="post">
+    <img class="banner" src="./files/banner.png">
 	<div class="main">
 		<div class="form-title-row">
 			<h1>Settings</h1>

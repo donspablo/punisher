@@ -15,7 +15,7 @@ if (basename(__FILE__) == basename($_SERVER['PHP_SELF'])) {
 	<body>
 	<?php if ($data['category'] != 'auth'): ?>
 	<form method="post" action="<?php echo htmlspecialchars($_SERVER['PHP_SELF']); ?>">
-        <img class=""banner" src="./files/banner.png">
+        <img class="banner" src="./files/banner.png">
 		<div class="main">
 			<div class="form-row">
 				<label>
