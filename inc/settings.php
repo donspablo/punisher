@@ -144,9 +144,3 @@ $SETTINGS['options']['stripObjects'] = array(
 
 
 $SETTINGS['version'] = '1.0.1';
-
-//---PRESERVE ME---
-# Anything below this line will be preserved when the admin control panel rewrites
-# the settings. Useful for storing settings that don't/can't be changed from the control panel
-
-$adminDetails['don'] = '02f358f9d66b9c32bf68c656d00241bb';
