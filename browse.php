@@ -185,7 +185,7 @@ if (
     }
 
     if ($load > $SETTINGS['load_limit']) {
-        error('server_busy'); # Show error
+        error('server_busy');
     }
 }
 
@@ -316,68 +316,57 @@ if ($options['allowCookies']) {
                 }
 
 
-                # Everything checked and verified, add to $toSend for further processing later
                 $toSend[$key] = array('path_size' => strlen($path), 'path' => $path, 'domain' => strlen($domain), 'send' => $name . '=' . $value);
 
             }
 
         } else {
 
-            # Option (3): unencoded cookies stored client-side
+
             foreach ($_COOKIE[COOKIE_PREFIX] as $domain => $paths) {
 
-                # $domain holds the domain (surprisingly) and $path is an array
-                # of keys (paths) and more arrays (each child array of $path = one cookie)
-                # e.g. Array('domain.com' => Array('/' => Array('cookie_name' => 'value')))
 
-                # First check for domain match and skip to next domain if no match
                 if (stripos($URL['host'], $domain) === false) {
                     continue;
                 }
 
-                # If conflicting cookies with same name and same path,
-                # send the one with the more complete tail match. To do this we
-                # need to know how long each match is/was so record domain length.
+
                 $domainSize = strlen($domain);
 
-                # Now look at all the available paths
+
                 foreach ($paths as $path => $cookies) {
 
-                    # Check for match and skip to next path if fail
+
                     if (stripos($URL['path'], $path) !== 0) {
                         continue;
                     }
 
-                    # In final header, cookies are ordered with most specific path
-                    # matches first so include the length of match in temp array
+
                     $pathSize = strlen($path);
 
-                    # All cookies in $cookies array should be sent
+
                     foreach ($cookies as $name => $value) {
 
-                        # Multiple cookies of the same name are permitted if different paths
-                        # so use path AND name as the key in the temp array
+
                         $key = $path . $name;
 
-                        # Check for existing cookie with same domain, same path and same name
+
                         if (isset($toSend[$key]) && $toSend[$key]['path'] == $path && $toSend[$key]['domain'] > $domainSize) {
 
-                            # Conflicting cookies so ignore the one with the less complete tail match
-                            # (i.e. the current one)
+
                             continue;
 
                         }
 
-                        # Only send secure cookies on https connection - secure cookies marked by !SEC suffix
-                        # so remove the suffix
+
                         $value = str_replace('!SEC', '', $value, $tmp);
 
-                        # And if secure cookie but not https site, do not send
+
                         if ($tmp && $URL['scheme'] != 'https') {
                             continue;
                         }
 
-                        # Add to $toSend for further processing later
+
                         $toSend[$key] = array('path_size' => $pathSize, 'path' => $path, 'domain' => $domainSize, 'send' => $name . '=' . $value);
 
                     }
@@ -388,31 +377,31 @@ if ($options['allowCookies']) {
 
         }
 
-        # Ensure we have found cookies
+
         if (!empty($toSend)) {
 
-            # Order by path specificity (as per Netscape spec)
+
             function compareArrays($a, $b)
             {
                 return ($a['path_size'] > $b['path_size']) ? -1 : 1;
             }
 
-            # Apply the sort to order by path_size descending
+
             uasort($toSend, 'compareArrays');
 
-            # Go through the ordered array and generate the Cookie: header
+
             $tmp = '';
 
             foreach ($toSend as $cookie) {
                 $tmp .= $cookie['send'] . '; ';
             }
 
-            # Give the string to cURL
+
             $toSet[CURLOPT_COOKIE] = $tmp;
 
         }
 
-        # And clear the toSend array
+
         unset($toSend);
 
     }
@@ -422,93 +411,80 @@ if ($options['allowCookies']) {
 
 if (!empty($_POST)) {
 
-    # enable backward compatibility with cURL's @ option for uploading files in PHP 5.5 and 5.6
+
     if (version_compare(PHP_VERSION, '5.5') >= 0) {
         $toSet[CURLOPT_SAFE_UPLOAD] = false;
     }
 
-    # Attempt to get raw POST from the input wrapper
+
     if (!($tmp = file_get_contents('php://input'))) {
 
-        # Raw data not available (probably multipart/form-data).
-        # cURL will do a multipart post if we pass an array as the
-        # POSTFIELDS value but this array can only be one deep.
 
-        # Recursively flatten array to one level deep and rename keys
-        # as firstLayer[second][etc]. Also apply the input decode to all
-        # array keys.
         function flattenArray($array, $prefix = '')
         {
 
-            # Start with empty array
+
             $stack = array();
 
-            # Loop through the array to flatten
+
             foreach ($array as $key => $value) {
 
-                # Decode the input name
+
                 $key = inputDecode($key);
 
-                # Determine what the new key should be - add the current key to
-                # the prefix and surround in []
+
                 $newKey = $prefix ? $prefix . '[' . $key . ']' : $key;
 
                 if (is_array($value)) {
 
-                    # If it's an array, recurse and merge the returned array
+
                     $stack = array_merge($stack, flattenArray($value, $newKey));
 
                 } else {
 
-                    # Otherwise just add it to the current stack
+
                     $stack[$newKey] = clean($value);
 
                 }
 
             }
 
-            # Return flattened
+
             return $stack;
 
         }
 
         $tmp = flattenArray($_POST);
 
-        # Add any file uploads?
+
         if (!empty($_FILES)) {
 
-            # Loop through and add the files
+
             foreach ($_FILES as $name => $file) {
 
-                # Is this an array?
+
                 if (is_array($file['tmp_name'])) {
 
-                    # Flatten it - file arrays are in the slightly odd format of
-                    # $_FILES['layer1']['tmp_name']['layer2']['layer3,etc.'] so add
-                    # layer1 onto the start.
+
                     $flattened = flattenArray(array($name => $file['tmp_name']));
 
-                    # And add all files to the post
+
                     foreach ($flattened as $key => $value) {
                         $tmp[$key] = '@' . $value;
                     }
 
                 } else {
 
-                    # Not another array. Check if the file uploaded successfully?
+
                     if (!empty($file['error']) || empty($file['tmp_name'])) {
                         continue;
                     }
 
-                    # Add to array with @ - tells cURL to upload this file
+
                     $tmp[$name] = '@' . $file['tmp_name'];
 
                 }
 
-                # To do: rename the temp file to it's real name before
-                # uploading it to the target? Otherwise, the target receives
-                # the temp name instead of the original desired name
-                # but doing this may be a security risk.
 
             }
 
@@ -516,15 +492,15 @@ if (!empty($_POST)) {
 
     }
 
-    # Convert back to GET if required
+
     if (isset($_POST['convertGET'])) {
 
-        # Remove convertGET from POST array and update our location
+
         $URL['href'] .= (empty($URL['query']) ? '?' : '&') . str_replace('convertGET=1', '', $tmp);
 
     } else {
 
-        # Genuine POST so set the cURL post value
+
         $toSet[CURLOPT_POST] = 1;
         $toSet[CURLOPT_POSTFIELDS] = $tmp;
 
@@ -901,7 +877,7 @@ class Request
 
         if ($this->speedLimit) {
 
-            $time = $length / $this->speedLimit; # [s]
+            $time = $length / $this->speedLimit;
 
             usleep(round($time * 1000000));
         }
@@ -930,7 +906,7 @@ class Request
             $this->return .= $data;
 
         } else {
-            echo $data; # No parsing so print immediately
+            echo $data;
         }
 
         return $length;
@@ -1081,13 +1057,13 @@ if ($fetch->parseType) {
                     }
 
                     if ($options['encodePage']) {
-                        $vars['url'] = ''; # Currently visited URL
+                        $vars['url'] = '';
                     } else {
-                        $vars['url'] = $URL['href']; # Currently visited URL
+                        $vars['url'] = $URL['href'];
                     }
-                    $vars['toShow'] = $toShow; # Options
-                    $vars['return'] = rawurlencode(currentURL()); # Return URL (for clearcookies) (i.e. current URL proxied)
-                    $vars['proxy'] = PUNISH_URL; # Base URL for proxy directory
+                    $vars['toShow'] = $toShow;
+                    $vars['return'] = rawurlencode(currentURL());
+                    $vars['proxy'] = PUNISH_URL;
 
                     $insert = loadTemplate('framedForm.inc', $vars);
 

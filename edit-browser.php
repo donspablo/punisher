@@ -4,6 +4,7 @@ require 'inc/init.php';
 
 sendNoCache();
 
+
 ob_start();
 
 $return = empty($_GET['return']) ? '' : '<input type="button" value="Cancel" onclick="window.location=\'' . remove_html($_GET['return']) . '\'">';

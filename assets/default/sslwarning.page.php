@@ -1,35 +1,15 @@
 <html>
 <head>
     <title>Security Warning</title>
-    <style type="text/css">
-        html, body {
-            background: #0b1933;
-            text-align: center;
-        }
-
-        body {
-            font: 80% Tahoma;
-        }
-
-        #wrapper {
-            margin: 100px auto;
-            width: 500px;
-            text-align: left;
-            background: #fff;
-            padding: 10px;
-            border: 5px solid #ccc;
-        }
-
-        form {
-            text-align: center;
-        }
-    </style>
+    <script type="text/javascript" src="../assets/default/main.js"></script>
+    <link href="../assets/default/main.css" rel="stylesheet" type="text/css" media="all">
     <base href="<?php echo PUNISH_URL; ?>/">
 </head>
 <body>
 <div id="wrapper">
     <h1>Warning!</h1>
-    <p>The site you are attempting to browse is on a secure connection. This proxy is not on a secure connection.</p>
+    <p>The site you are attempting to browse is on a secure connection. This proxy is not on a secure
+        connection.</p>
     <p>The target site may send sensitive data, which may be intercepted when the proxy sends it back to you.</p>
     <form action="inc/process.php" method="get">
         <input type="hidden" name="action" value="sslagree">

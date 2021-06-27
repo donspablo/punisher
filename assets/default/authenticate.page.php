@@ -11,38 +11,6 @@
             font: 80% Tahoma;
         }
 
-        margin:
-
-        100
-        px auto
-
-        ;
-        width:
-
-        500
-        px
-
-        ;
-        text-align: left
-
-        ;
-        background: #fff
-
-        ;
-        padding:
-
-        10
-        px
-
-        ;
-        border:
-
-        5
-        px solid #ccc
-
-        ;
-        }
-
         form {
             margin: 5px;
             background: #eee;
